@@ -1,1 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>To-Do Manager (Offline)</title>
+<style>
+:root{
+  --bg:#f2f5f8;
+  --card:#fff;
+  --muted:#6b7280;
+  --accent:#0ea5a4;
+  --accent-dark:#046c68;
+  --danger:#ef4444;
+  --radius:14px;
+  --shadow:0 8px 24px rgba(15,23,42,0.08);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
 
+html,body{margin:0;height:100%;background:var(--bg);color:#0f172a;}
+
+.wrap{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px 16px;
+}
+
+.card{
+  width:100%;
+  max-width:600px;
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:28px;
+  box-sizing:border-box;
+}
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+header h1{font-size:22px;margin:0;}
+header p{color:var(--muted);font-size:14px;margin:0;}
+
+form#taskForm{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:12px;
+  align-items:end;
+  margin-top:16px;
+}
+.inputs{display:grid;gap:10px;}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px;}
+input[type="text"],input[type="date"]{
+  width:100%;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid #d1d5db;
+  font-size:15px;
+  box-sizing:border-box;
+}
+input[type="text"]:focus,input[type="date"]:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 4px rgba(14,165,164,0.15);
+}
+
+.btn{
+  background:var(--accent);
+  color:white;
+  border:none;
+  padding:12px 18px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+  font-size:15px;
+}
+.btn:hover{background:var(--accent-dark);}
+.btn.ghost{
+  background:transparent;
+  color:var(--accent);
+  border:1px solid rgba(14,165,164,0.3);
+}
+.btn.ghost:hover{
+  background:rgba(14,165,164,0.05);
+}
+
+.controls{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-top:20px;
+  flex-wrap:wrap;
+}
+.segmented{
+  display:inline-flex;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid #d1d5db;
+  background:#fff;
+}
+.segmented button{
+  padding:10px 14px;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  font-size:14px;
+  color:var(--muted);
+}
+.segmented button[aria-pressed="true"]{
+  background:linear-gradient(180deg,rgba(14,165,164,0.1),rgba(14,165,164,0.05));
+  color:var(--accent-dark);
+  font-weight:600;
+}
+
+.search{
+  margin-left:auto;
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.search input{
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #d1d5db;
+  font-size:14px;
+  width:220px;
+}
+
+.list{margin-top:20px;}
+.task{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+  background:linear-gradient(180deg,#fff,#fafcfd);
+  margin-bottom:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.04);
+  transition:box-shadow .2s;
+}
+.task:hover{box-shadow:0 3px 10px rgba(0,0,0,0.08);}
+.task.completed .title{text-decoration:line-through;color:var(--muted);}
+.task.completed{opacity:0.85;}
+
+.task .left{display:flex;gap:12px;align-items:center;flex:1;min-width:0;}
+.task input[type="checkbox"]{width:22px;height:22px;cursor:pointer;}
+.meta{min-width:0;}
+.title{font-size:16px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.info{font-size:13px;color:var(--muted);margin-top:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.category{padding:4px 8px;border-radius:999px;background:#f1f6f6;font-size:12px;}
+.due{font-size:12px;}
+.badge-overdue{color:white;background:var(--danger);padding:3px 8px;border-radius:6px;font-size:12px;}
+
+.actions{display:flex;gap:8px;align-items:center;}
+.icon-btn{
+  border:1px solid #e5e7eb;
+  background:#fff;
+  padding:8px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:13px;
+}
+.icon-btn:hover{background:#f9fafb;}
+
+.summary{
+  margin-top:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:14px;
+  color:var(--muted);
+}
+
+.editing .edit-fields{display:flex;gap:8px;align-items:center;flex:1;}
+.editing .edit-fields input{
+  flex:1;
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid #d1d5db;
+}
+.editing .edit-fields input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 4px rgba(14,165,164,0.1);
+  outline:none;
+}
+.editing .info, .editing .title{display:none;}
+@media(max-width:520px){
+  form#taskForm{grid-template-columns:1fr;}
+  .search input{width:150px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main class="card" role="main" aria-labelledby="appTitle">
+    <header>
+      <div>
+        <h1 id="appTitle">To-Do Manager</h1>
+        <p>Offline to-do app with categories & dates.</p>
+      </div>
+    </header>
+
+    <form id="taskForm" aria-label="Add task form">
+      <div class="inputs">
+        <div>
+          <label for="title">Task title *</label>
+          <input id="title" required placeholder="e.g. Finish project">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <label for="category">Category (optional)</label>
+            <input id="category" placeholder="e.g. Work, Personal">
+          </div>
+          <div style="width:160px;">
+            <label for="due">Due date</label>
+            <input id="due" type="date">
+          </div>
+        </div>
+      </div>
+      <button class="btn" id="addBtn">Add</button>
+    </form>
+
+    <div class="controls">
+      <div class="segmented">
+        <button data-filter="all" aria-pressed="true">All</button>
+        <button data-filter="active" aria-pressed="false">Active</button>
+        <button data-filter="completed" aria-pressed="false">Completed</button>
+      </div>
+      <div class="search">
+        <input id="q" placeholder="Search title/category">
+        <button type="button" id="clearSearch" class="btn ghost">Clear</button>
+      </div>
+    </div>
+
+    <section class="list" id="taskList"></section>
+
+    <div class="summary">
+      <div id="counts">0 tasks</div>
+      <div>
+        <button id="clearCompleted" class="icon-btn">Clear completed</button>
+        <button id="clearAll" class="icon-btn">Delete all</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const STORAGE_KEY='todo_manager_tasks_v1';
+let tasks=[],filter='all',query='';
+
+function uid(){return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);}
+function load(){try{tasks=JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch{tasks=[];}}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(tasks));}
+
+const form=document.getElementById('taskForm'),
+ title=document.getElementById('title'),
+ cat=document.getElementById('category'),
+ due=document.getElementById('due'),
+ list=document.getElementById('taskList'),
+ counts=document.getElementById('counts'),
+ fBtns=document.querySelectorAll('.segmented button'),
+ q=document.getElementById('q'),
+ clrSearch=document.getElementById('clearSearch'),
+ clrCompleted=document.getElementById('clearCompleted'),
+ clrAll=document.getElementById('clearAll');
+
+function formatDate(d){if(!d)return'';return new Date(d+'T00:00:00').toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}
+function isOverdue(d){if(!d)return false;return new Date(d+'T23:59:59')<new Date();}
+
+function render(){
+ list.innerHTML='';
+ let visible=tasks.filter(t=>{
+  if(filter==='active'&&t.completed)return false;
+  if(filter==='completed'&&!t.completed)return false;
+  if(query){
+    let ql=query.toLowerCase();
+    if(!(t.title.toLowerCase().includes(ql)||(t.category||'').toLowerCase().includes(ql)))return false;
+  }
+  return true;
+ });
+ if(!visible.length){list.innerHTML='<div style="color:var(--muted);padding:16px;">No tasks.</div>';updateCounts();return;}
+ visible.forEach(t=>{
+  const div=document.createElement('div');
+  div.className='task'+(t.completed?' completed':'');
+  div.dataset.id=t.id;
+  div.innerHTML=`
+   <div class="left">
+     <input type="checkbox" ${t.completed?'checked':''} aria-label="Complete task">
+     <div class="meta">
+       <h3 class="title">${t.title}</h3>
+       <div class="info">
+         ${t.category?`<span class="category">${t.category}</span>`:''}
+         ${t.due?`<span class="${isOverdue(t.due)&&!t.completed?'badge-overdue due':'due'}">${formatDate(t.due)}</span>`:''}
+       </div>
+     </div>
+     <div class="edit-fields" style="display:none;">
+       <input class="edit-title" value="${t.title}">
+       <input class="edit-category" value="${t.category||''}" placeholder="Category">
+     </div>
+   </div>
+   <div class="actions">
+     <button class="icon-btn edit-btn">Edit</button>
+     <button class="icon-btn save-btn" style="display:none;">Save</button>
+     <button class="icon-btn cancel-btn" style="display:none;">Cancel</button>
+     <button class="icon-btn delete-btn">Delete</button>
+   </div>`;
+  list.appendChild(div);
+ });
+
+ updateCounts();
+}
+
+function updateCounts(){
+ let total=tasks.length,comp=tasks.filter(t=>t.completed).length,act=total-comp;
+ counts.textContent=`${total} total • ${act} active • ${comp} completed`;
+}
+
+function addTask(t){
+ tasks.push(t);
+ save();render();
+}
+
+form.addEventListener('submit',e=>{
+ e.preventDefault();
+ let val=title.value.trim();
+ if(!val)return;
+ addTask({id:uid(),title:val,category:cat.value.trim()||null,due:due.value||null,completed:false,createdAt:Date.now()});
+ title.value=cat.value=due.value='';
+ title.focus();
+});
+
+list.addEventListener('click',e=>{
+ const item=e.target.closest('.task');if(!item)return;
+ const id=item.dataset.id;const t=tasks.find(x=>x.id===id);
+ if(e.target.matches('input[type="checkbox"]')){t.completed=!t.completed;save();render();}
+ else if(e.target.classList.contains('delete-btn')){tasks=tasks.filter(x=>x.id!==id);save();render();}
+ else if(e.target.classList.contains('edit-btn')){enterEdit(item);}
+ else if(e.target.classList.contains('save-btn')){saveEdit(item);}
+ else if(e.target.classList.contains('cancel-btn')){exitEdit(item,false);}
+});
+
+function enterEdit(el){
+ el.classList.add('editing');
+ el.querySelector('.edit-fields').style.display='flex';
+ el.querySelector('.meta').style.display='none';
+ el.querySelector('.edit-btn').style.display='none';
+ el.querySelector('.save-btn').style.display='inline-block';
+ el.querySelector('.cancel-btn').style.display='inline-block';
+ el.querySelector('.edit-title').focus();
+}
+function exitEdit(el,saveChanges){
+ const id=el.dataset.id;
+ const t=tasks.find(x=>x.id===id);
+ if(saveChanges){
+   const newTitle=el.querySelector('.edit-title').value.trim();
+   if(newTitle)t.title=newTitle;
+   t.category=el.querySelector('.edit-category').value.trim()||null;
+ }
+ save();
+ render();
+}
+
+function saveEdit(el){exitEdit(el,true);}
+
+fBtns.forEach(b=>b.addEventListener('click',()=>{
+ fBtns.forEach(x=>x.setAttribute('aria-pressed','false'));
+ b.setAttribute('aria-pressed','true');
+ filter=b.dataset.filter;render();
+}));
+
+q.addEventListener('input',e=>{query=e.target.value;render();});
+clrSearch.addEventListener('click',()=>{q.value='';query='';render();});
+clrCompleted.addEventListener('click',()=>{
+ if(!confirm('Remove all completed tasks?'))return;
+ tasks=tasks.filter(t=>!t.completed);save();render();
+});
+clrAll.addEventListener('click',()=>{
+ if(!confirm('Delete ALL tasks?'))return;
+ tasks=[];save();render();
+});
+
+load();render();
+</script>
+</body>
+</html>
